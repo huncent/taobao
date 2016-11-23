@@ -1,13 +1,12 @@
 package taobao
 
 import (
-	"fmt"
-	"time"
-	"sort"
-	"strings"
 	"crypto/md5"
 	"encoding/hex"
-	"github.com/smartwalle/going/http"
+	"fmt"
+	"sort"
+	"strings"
+	"time"
 )
 
 const (
@@ -24,19 +23,19 @@ func UpdateKey(appKey, appSecret string) {
 	appSecret = appSecret
 }
 
-func Request(param ITaoBaoParam) (results map[string]interface{}, err error) {
+func Request(param ITaoBaoParam) (results ResultResp, err error) {
 	results, err = RequestWithKey(appKey, appSecret, param)
 	return results, err
 }
 
-func RequestWithKey(appKey, appSecret string, param ITaoBaoParam) (results map[string]interface{}, err error) {
+func RequestWithKey(appKey, appSecret string, param ITaoBaoParam) (results ResultResp, err error) {
 	var p = make(map[string]string)
-	p["timestamp"]       = time.Now().Format("2006-01-02 15:04:05")
-	p["format"]          = "json"
-	p["v"]               = "2.0"
-	p["sign_method"]     = "md5"
-	p["app_key"]         = appKey
-	p["method"]          = param.APIName()
+	p["timestamp"] = time.Now().Format("2006-01-02 15:04:05")
+	p["format"] = "json"
+	p["v"] = "2.0"
+	p["sign_method"] = "md5"
+	p["app_key"] = appKey
+	p["method"] = param.APIName()
 
 	if len(param.ExtJSONParamName()) > 0 {
 		p[param.ExtJSONParamName()] = param.ExtJSONParamValue()
@@ -49,8 +48,9 @@ func RequestWithKey(appKey, appSecret string, param ITaoBaoParam) (results map[s
 		}
 	}
 
-	var c = http.NewClient()
+	var c = NewClient()
 	c.SetMethod("POST")
+	fmt.Println("TAO_BAO_OPEN_API_URL", TAO_BAO_OPEN_API_URL)
 	c.SetURLString(TAO_BAO_OPEN_API_URL)
 
 	var keys = make([]string, 0, len(p))
@@ -63,6 +63,7 @@ func RequestWithKey(appKey, appSecret string, param ITaoBaoParam) (results map[s
 	c.SetParam("sign", sign(appSecret, keys, p))
 
 	results, err = c.DoJsonRequest()
+	fmt.Println("results", results)
 	return results, err
 }
 
