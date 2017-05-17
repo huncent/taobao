@@ -3,12 +3,14 @@ package taobao
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
-	"github.com/smartwalle/going/http"
 	"net/url"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/smartwalle/going/request"
 )
 
 const (
@@ -25,12 +27,12 @@ func UpdateKey(appKey, appSecret string) {
 	appSecret = appSecret
 }
 
-func Request(param ITaoBaoParam) (results map[string]interface{}, err error) {
+func Request(param ITaoBaoParam) (results interface{}, err error) {
 	results, err = RequestWithKey(appKey, appSecret, param)
 	return results, err
 }
 
-func RequestWithKey(appKey, appSecret string, param ITaoBaoParam) (results map[string]interface{}, err error) {
+func RequestWithKey(appKey, appSecret string, param ITaoBaoParam) (result ResultResp, err error) {
 	var p = url.Values{}
 	var keys = make([]string, 6, 6)
 
@@ -63,8 +65,10 @@ func RequestWithKey(appKey, appSecret string, param ITaoBaoParam) (results map[s
 	sort.Strings(keys)
 	p.Add("sign", sign(appSecret, keys, p))
 
-	results, err = http.JSONRequest("POST", TAO_BAO_OPEN_API_URL, p)
-	return results, err
+	respBodyByte, _ := request.Request("POST", TAO_BAO_OPEN_API_URL, p)
+	err = json.Unmarshal(respBodyByte, &result)
+	return result, err
+	//return results, err
 }
 
 func sign(appSecret string, keys []string, param url.Values) (s string) {
